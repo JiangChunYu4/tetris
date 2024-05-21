@@ -1,50 +1,55 @@
 <template>
   <div class="game-container">
     <div v-if="isGameOver" class="game-over">Game Over</div>
-    <div class="main-frame">
-      <div
-        v-for="(item, index) in mainFrame"
-        :key="index"
-        class="cell"
-        :style="{
-          background: item.bgColor,
-        }"
-      ></div>
-    </div>
-    <div class="sub-frame">
-      <div
-        v-for="(item, index) in subFrame"
-        :key="index"
-        class="cell"
-        :style="{
-          background: item.bgColor,
-        }"
-      ></div>
-    </div>
-    <div class="operation-box">
-      <div class="pause btn" @click="pauseGame">暂停</div>
-      <div class="btn" @click="changeTheme">主题</div>
-      <div class="rotate btn" @click="downRotate">旋转</div>
-      <div class="btn" @click="moveLeft">向左</div>
-      <div class="btn" @click="moveRight">向右</div>
-      <div class="move-down btn" @click="moveDown">向下</div>
-    </div>
-    <div class="data-box">
-      <div class="data-row">
-        <div class="data-label">清除次数:</div>
-        <div class="data">{{ clearTimes }}</div>
+    <div class="game-left">
+      <div class="main-frame">
+        <div
+          v-for="(item, index) in mainFrame"
+          :key="index"
+          class="cell"
+          :style="{
+            background: item.bgColor,
+          }"
+        ></div>
       </div>
-      <div class="data-row">
-        <div class="data-label">等级:</div>
-        <div class="data">{{ level }}</div>
+      <div class="operation-box">
+        <div class="pause btn" @click="pauseGame">暂停</div>
+        <div class="btn" @click="changeTheme">主题</div>
+        <div class="rotate btn" @click="downRotate">旋转</div>
+        <div class="btn" @click="moveLeft">向左</div>
+        <div class="btn" @click="moveRight">向右</div>
+        <div class="move-down btn" @click="moveDown">向下</div>
       </div>
-      <div class="data-row">
-        <div class="data-label">分数:</div>
-        <div class="data">{{ score }}</div>
+    </div>
+    <div class="game-right">
+      <div class="sub-frame">
+        <div
+          v-for="(item, index) in subFrame"
+          :key="index"
+          class="cell"
+          :style="{
+            background: item.bgColor,
+          }"
+        ></div>
       </div>
-      <div class="data-row">
-        <div class="data-label">速度:</div>
-        <div class="data">{{ speed }}</div>
+
+      <div class="data-box">
+        <div class="data-row">
+          <div class="data-label">清除次数:</div>
+          <div class="data">{{ clearTimes }}</div>
+        </div>
+        <div class="data-row">
+          <div class="data-label">等级:</div>
+          <div class="data">{{ level }}</div>
+        </div>
+        <div class="data-row">
+          <div class="data-label">分数:</div>
+          <div class="data">{{ score }}</div>
+        </div>
+        <div class="data-row">
+          <div class="data-label">速度:</div>
+          <div class="data">{{ speed }}</div>
+        </div>
       </div>
     </div>
   </div>
@@ -430,9 +435,9 @@ onBeforeUnmount(() => {
   height: 100%;
   min-height: 100vh;
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
+  gap:20px;
   background: #fff;
 
   --main-frame-row: 20;
@@ -442,78 +447,83 @@ onBeforeUnmount(() => {
   --cell-size: 20px;
   --cell-gap: 1px;
   --operation-box-width: 150px;
-  --btn-height: 30px;
+  --btn-height: 50px;
   --btn-border-radius: 5px;
   --game-over-font-size: 30px;
   --data-font-size: 16px;
 
-  .game-over {
-    position: absolute;
-    color: limegreen;
-    font-size: var(--game-over-font-size);
-    line-height: var(--game-over-font-size);
-    font-weight: bold;
-    font-family: Consolas;
+  .game-left {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 100%;
+    .main-frame {
+      display: grid;
+      grid-template-rows: repeat(var(--main-frame-row), 1fr);
+      grid-template-columns: repeat(var(--main-frame-column), 1fr);
+      gap: var(--cell-gap);
+      border: 1px solid #ccc;
+    }
+    .operation-box {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 5px;
+      .btn {
+        height: var(--btn-height);
+        padding: 0 30px;
+        background: rgba(72, 72, 213, 0.6);
+        border-radius: var(--btn-border-radius);
+        line-height: var(--btn-height);
+        text-align: center;
+        color: #fff;
+        cursor: pointer;
+      }
+      .rotate,
+      .move-down {
+        grid-column: 1/3;
+        border-radius: calc(var(--btn-border-radius) * 2);
+      }
+    }
+    .game-over {
+      position: absolute;
+      color: limegreen;
+      font-size: var(--game-over-font-size);
+      line-height: var(--game-over-font-size);
+      font-weight: bold;
+      font-family: Consolas;
+    }
   }
-  .main-frame {
-    display: grid;
-    grid-template-rows: repeat(var(--main-frame-row), 1fr);
-    grid-template-columns: repeat(var(--main-frame-column), 1fr);
-    gap: var(--cell-gap);
-    border: 1px solid #ccc;
+
+  .game-right {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 100%;
+    .sub-frame {
+      display: grid;
+      grid-template-rows: repeat(var(--sub-frame-row), 1fr);
+      grid-template-columns: repeat(var(--sub-frame-column), 1fr);
+      gap: var(--cell-gap);
+    }
+    .data-box {
+      .data-row {
+        display: flex;
+        gap: 10px;
+        .data-label {
+          font-size: var(--data-font-size);
+        }
+        .data {
+          font-size: var(--data-font-size);
+          font-weight: 700;
+          color: #00aaee;
+        }
+      }
+    }
   }
-  .sub-frame {
-    position: absolute;
-    top: calc(var(--cell-size) * 3);
-    left: calc(50% + var(--cell-size) * 6);
-    display: grid;
-    grid-template-rows: repeat(var(--sub-frame-row), 1fr);
-    grid-template-columns: repeat(var(--sub-frame-column), 1fr);
-    gap: var(--cell-gap);
-  }
+
   .cell {
     width: var(--cell-size);
     height: var(--cell-size);
-  }
-  .operation-box {
-    margin-top: 10px;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 5px;
-
-    .btn {
-      height: var(--btn-height);
-      padding: 0 10px;
-      background: rgba(72, 72, 213, 0.6);
-      border-radius: var(--btn-border-radius);
-      line-height: var(--btn-height);
-      text-align: center;
-      color: #fff;
-      cursor: pointer;
-    }
-
-    .rotate,
-    .move-down {
-      grid-column: 1/3;
-      border-radius: calc(var(--btn-border-radius) * 2);
-    }
-  }
-  .data-box {
-    position: absolute;
-    top: calc(var(--cell-size) * 10);
-    left: calc(50% + var(--cell-size) * 6);
-    .data-row {
-      display: flex;
-      gap: 10px;
-      .data-label {
-        font-size: var(--data-font-size);
-      }
-      .data {
-        font-size: var(--data-font-size);
-        font-weight: 700;
-        color: #00aaee;
-      }
-    }
   }
 }
 </style>
