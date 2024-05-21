@@ -306,7 +306,7 @@ const clearBlock = () => {
     }
     columnCount++;
   }
-  if (columnCount === mainFrameRow.value - 1 || columnCount === mainFrameColumn.value) {
+  if (columnCount >= mainFrameRow.value - 1) {
     pauseGame();
     isGameOver.value = true;
     return;
