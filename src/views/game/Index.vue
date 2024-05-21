@@ -1,6 +1,5 @@
 <template>
   <div class="game-container">
-    <div v-if="isGameOver" class="game-over">Game Over</div>
     <div class="game-left">
       <div class="main-frame">
         <div
@@ -10,11 +9,11 @@
           :style="{
             background: item.bgColor,
           }"
-        ></div>
+        >
+          <div v-if="isGameOver" class="game-over">Game Over</div>
+        </div>
       </div>
       <div class="operation-box">
-        <div class="pause btn" @click="pauseGame">暂停</div>
-        <div class="btn" @click="changeTheme">主题</div>
         <div class="rotate btn" @click="downRotate">旋转</div>
         <div class="btn" @click="moveLeft">向左</div>
         <div class="btn" @click="moveRight">向右</div>
@@ -32,7 +31,6 @@
           }"
         ></div>
       </div>
-
       <div class="data-box">
         <div class="data-row">
           <div class="data-label">清除次数:</div>
@@ -50,6 +48,15 @@
           <div class="data-label">速度:</div>
           <div class="data">{{ speed }}</div>
         </div>
+      </div>
+      <div class="system-box">
+        <div class="btn" @click="pauseGame" v-if="!isGameRunning">
+          暂停
+        </div>
+        <div class="btn" @click="pauseGame" v-else="isGameRunning">
+          开始
+        </div>
+        <div class="btn" @click="changeTheme">切换主题</div>
       </div>
     </div>
   </div>
@@ -83,7 +90,7 @@ const isGameOver = ref(false); // 游戏是否结束
 const score = ref(0); // 得分
 const level = ref(1); // 等级
 const clearTimes = ref(0); // 消除次数
-const upgradeThreshold = ref(10); // 等级升级阈值
+const upgradeThreshold = ref(5); // 等级升级阈值
 
 const renderMainFrame = () => {
   for (let i = 0; i < mainFrameRow.value; i++) {
@@ -430,14 +437,13 @@ onBeforeUnmount(() => {
 
 <style lang="less" scoped>
 .game-container {
-  position: relative;
   width: 100%;
   height: 100%;
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  gap:20px;
+  gap: 20px;
   background: #fff;
 
   --main-frame-row: 20;
@@ -458,11 +464,25 @@ onBeforeUnmount(() => {
     gap: 10px;
     height: 100%;
     .main-frame {
+      position: relative;
       display: grid;
       grid-template-rows: repeat(var(--main-frame-row), 1fr);
       grid-template-columns: repeat(var(--main-frame-column), 1fr);
       gap: var(--cell-gap);
       border: 1px solid #ccc;
+      .game-over {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+        color: limegreen;
+        font-size: var(--game-over-font-size);
+        line-height: var(--game-over-font-size);
+        font-weight: bold;
+        font-family: Consolas;
+        text-align: center;
+      }
     }
     .operation-box {
       display: grid;
@@ -470,7 +490,6 @@ onBeforeUnmount(() => {
       gap: 5px;
       .btn {
         height: var(--btn-height);
-        padding: 0 30px;
         background: rgba(72, 72, 213, 0.6);
         border-radius: var(--btn-border-radius);
         line-height: var(--btn-height);
@@ -483,14 +502,6 @@ onBeforeUnmount(() => {
         grid-column: 1/3;
         border-radius: calc(var(--btn-border-radius) * 2);
       }
-    }
-    .game-over {
-      position: absolute;
-      color: limegreen;
-      font-size: var(--game-over-font-size);
-      line-height: var(--game-over-font-size);
-      font-weight: bold;
-      font-family: Consolas;
     }
   }
 
@@ -517,6 +528,20 @@ onBeforeUnmount(() => {
           font-weight: 700;
           color: #00aaee;
         }
+      }
+    }
+    .system-box {
+      display: grid;
+      grid-template-columns: repeat(1, 1fr);
+      gap: 5px;
+      .btn {
+        height: var(--btn-height);
+        background: rgba(246, 214, 11, 0.8);
+        border-radius: var(--btn-border-radius);
+        line-height: var(--btn-height);
+        text-align: center;
+        color: #fff;
+        cursor: pointer;
       }
     }
   }
