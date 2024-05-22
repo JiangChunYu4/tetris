@@ -17,7 +17,14 @@
         <div class="rotate btn" @click="downRotate">旋转</div>
         <div class="btn" @click="moveLeft">向左</div>
         <div class="btn" @click="moveRight">向右</div>
-        <div class="move-down btn" @click="moveDown">向下</div>
+        <div
+          class="move-down btn"
+          @click="moveDown"
+          @touchstart="startLongPressMoveDown"
+          @touchend="endLongPressMoveDown"
+        >
+          向下
+        </div>
       </div>
     </div>
     <div class="game-right">
@@ -50,12 +57,8 @@
         </div>
       </div>
       <div class="system-box">
-        <div class="btn" @click="pauseGame" v-if="!isGameRunning">
-          暂停
-        </div>
-        <div class="btn" @click="pauseGame" v-else="isGameRunning">
-          开始
-        </div>
+        <div class="btn" @click="pauseGame" v-if="isGameRunning">暂停</div>
+        <div class="btn" @click="pauseGame" v-else="!isGameRunning">开始</div>
         <div class="btn" @click="changeTheme">切换主题</div>
       </div>
     </div>
@@ -79,8 +82,8 @@ const current = reactive({ index: 0, transform: 0 }); // 当前方块下标及�
 const next = reactive({ index: 0, transform: 0 }); // 下一个方块下标及旋转下标
 let currentBlock = reactive({}); // 当前方块
 let nextBlock = reactive({}); // 下一个方块
-const removeRows = reactive([]); // 预消除行的下标
 let timer = null; // 控制游戏运行的定时器
+const removeRows = reactive([]); // 预消除行的下标
 const initSpeed = ref(800); // 初始速度
 const speed = ref(initSpeed.value); // 当前速度
 const minimumSpeed = ref(100); // 最快速度
@@ -389,6 +392,24 @@ const changeTheme = () => {
     theme.value = "lineGradientLigthTheme";
   }
 };
+const startLongPressMoveDown = (event) => {
+  event.preventDefault();
+  if (timer) {
+    clearInterval(timer);
+  }
+  timer = setInterval(() => {
+    moveDown();
+  }, minimumSpeed.value);
+};
+const endLongPressMoveDown = (event) => {
+  event.preventDefault();
+  if (timer) {
+    clearInterval(timer);
+  }
+  timer = setInterval(() => {
+    moveDown();
+  }, speed.value);
+};
 const renderFrame = () => {
   renderMainFrame();
   renderSubFrame();
@@ -437,13 +458,13 @@ onBeforeUnmount(() => {
 
 <style lang="less" scoped>
 .game-container {
-  width: 100%;
-  height: 100%;
-  min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 20px;
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
   background: #fff;
 
   --main-frame-row: 20;
@@ -453,7 +474,7 @@ onBeforeUnmount(() => {
   --cell-size: 20px;
   --cell-gap: 1px;
   --operation-box-width: 150px;
-  --btn-height: 50px;
+  --btn-height: 60px;
   --btn-border-radius: 5px;
   --game-over-font-size: 30px;
   --data-font-size: 16px;
@@ -466,8 +487,8 @@ onBeforeUnmount(() => {
     .main-frame {
       position: relative;
       display: grid;
-      grid-template-rows: repeat(var(--main-frame-row), 1fr);
-      grid-template-columns: repeat(var(--main-frame-column), 1fr);
+      grid-template-rows: repeat(var(--main-frame-row), var(--cell-size));
+      grid-template-columns: repeat(var(--main-frame-column), var(--cell-size));
       gap: var(--cell-gap);
       border: 1px solid #ccc;
       .game-over {
@@ -487,7 +508,7 @@ onBeforeUnmount(() => {
     .operation-box {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 5px;
+      gap: 20px 10px;
       .btn {
         height: var(--btn-height);
         background: rgba(72, 72, 213, 0.6);
@@ -512,8 +533,8 @@ onBeforeUnmount(() => {
     height: 100%;
     .sub-frame {
       display: grid;
-      grid-template-rows: repeat(var(--sub-frame-row), 1fr);
-      grid-template-columns: repeat(var(--sub-frame-column), 1fr);
+      grid-template-rows: repeat(var(--sub-frame-row), var(--cell-size));
+      grid-template-columns: repeat(var(--sub-frame-column), var(--cell-size));
       gap: var(--cell-gap);
     }
     .data-box {
@@ -535,10 +556,10 @@ onBeforeUnmount(() => {
       grid-template-columns: repeat(1, 1fr);
       gap: 5px;
       .btn {
-        height: var(--btn-height);
+        width: 100px;
         background: rgba(246, 214, 11, 0.8);
         border-radius: var(--btn-border-radius);
-        line-height: var(--btn-height);
+        line-height: 50px;
         text-align: center;
         color: #fff;
         cursor: pointer;
