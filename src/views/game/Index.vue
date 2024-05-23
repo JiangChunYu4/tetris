@@ -55,11 +55,16 @@
           <div class="data-label">速度:</div>
           <div class="data">{{ speed }}</div>
         </div>
+        <div class="data-row">
+          <div class="data-label">历史记录:</div>
+          <div class="data">{{ record }}</div>
+        </div>
       </div>
       <div class="system-box">
         <div class="btn" @click="pauseGame" v-if="isGameRunning">暂停</div>
         <div class="btn" @click="pauseGame" v-else="!isGameRunning">开始</div>
         <div class="btn" @click="changeTheme">切换主题</div>
+        <div class="btn" @click="resetGame">重新开始</div>
       </div>
     </div>
   </div>
@@ -94,6 +99,7 @@ const score = ref(0); // 得分
 const level = ref(1); // 等级
 const clearTimes = ref(0); // 消除次数
 const upgradeThreshold = ref(5); // 等级升级阈值
+const record = ref(0); // 历史记录
 
 const renderMainFrame = () => {
   for (let i = 0; i < mainFrameRow.value; i++) {
@@ -220,60 +226,68 @@ const moveDown = () => {
   if (isGameOver.value || !isGameRunning.value) {
     return;
   }
-  if (canMoveDown()) {
-    renderBlock(currentBlock, mainFrame, mainFrameColumn.value, "clear");
-    for (let i = 0; i < currentBlock.position.length; i += 2) {
-      currentBlock.position[i]++;
+  setTimeout(() => {
+    if (canMoveDown()) {
+      renderBlock(currentBlock, mainFrame, mainFrameColumn.value, "clear");
+      for (let i = 0; i < currentBlock.position.length; i += 2) {
+        currentBlock.position[i]++;
+      }
+      renderBlock(currentBlock, mainFrame, mainFrameColumn.value, "generate");
+    } else {
+      renderBlock(currentBlock, mainFrame, mainFrameColumn.value, "fix");
+      clearBlock();
     }
-    renderBlock(currentBlock, mainFrame, mainFrameColumn.value, "generate");
-  } else {
-    renderBlock(currentBlock, mainFrame, mainFrameColumn.value, "fix");
-    clearBlock();
-  }
+  }, 0);
 };
 const moveLeft = () => {
   if (isGameOver.value || !isGameRunning.value) {
     return;
   }
-  if (canMoveLeft()) {
-    renderBlock(currentBlock, mainFrame, mainFrameColumn.value, "clear");
-    for (let i = 0; i < currentBlock.position.length; i += 2) {
-      currentBlock.position[i + 1]--;
+  setTimeout(() => {
+    if (canMoveLeft()) {
+      renderBlock(currentBlock, mainFrame, mainFrameColumn.value, "clear");
+      for (let i = 0; i < currentBlock.position.length; i += 2) {
+        currentBlock.position[i + 1]--;
+      }
+      renderBlock(currentBlock, mainFrame, mainFrameColumn.value, "generate");
     }
-    renderBlock(currentBlock, mainFrame, mainFrameColumn.value, "generate");
-  }
+  }, 0);
 };
 const moveRight = () => {
   if (isGameOver.value || !isGameRunning.value) {
     return;
   }
-  if (canMoveRight()) {
-    renderBlock(currentBlock, mainFrame, mainFrameColumn.value, "clear");
-    for (let i = 0; i < currentBlock.position.length; i += 2) {
-      currentBlock.position[i + 1]++;
+  setTimeout(() => {
+    if (canMoveRight()) {
+      renderBlock(currentBlock, mainFrame, mainFrameColumn.value, "clear");
+      for (let i = 0; i < currentBlock.position.length; i += 2) {
+        currentBlock.position[i + 1]++;
+      }
+      renderBlock(currentBlock, mainFrame, mainFrameColumn.value, "generate");
     }
-    renderBlock(currentBlock, mainFrame, mainFrameColumn.value, "generate");
-  }
+  }, 0);
 };
 const downRotate = () => {
   if (isGameOver.value || !isGameRunning.value) {
     return;
   }
-  if (canRotate()) {
-    renderBlock(currentBlock, mainFrame, mainFrameColumn.value, "clear");
-    const x0 = currentBlock.position[0];
-    const y0 = currentBlock.position[1];
-    for (let i = 0; i < currentBlock.position.length; i += 2) {
-      const x = currentBlock.position[i] - x0;
-      const y = currentBlock.position[i + 1] - y0;
-      const xOffest = x0 + transformRules[current.index][current.transform].x;
-      const yOffset = y0 + transformRules[current.index][current.transform].y;
-      currentBlock.position[i] = y + xOffest;
-      currentBlock.position[i + 1] = -x + yOffset;
+  setTimeout(() => {
+    if (canRotate()) {
+      renderBlock(currentBlock, mainFrame, mainFrameColumn.value, "clear");
+      const x0 = currentBlock.position[0];
+      const y0 = currentBlock.position[1];
+      for (let i = 0; i < currentBlock.position.length; i += 2) {
+        const x = currentBlock.position[i] - x0;
+        const y = currentBlock.position[i + 1] - y0;
+        const xOffest = x0 + transformRules[current.index][current.transform].x;
+        const yOffset = y0 + transformRules[current.index][current.transform].y;
+        currentBlock.position[i] = y + xOffest;
+        currentBlock.position[i + 1] = -x + yOffset;
+      }
+      current.transform = (current.transform + 1) % 4;
+      renderBlock(currentBlock, mainFrame, mainFrameColumn.value, "generate");
     }
-    current.transform = (current.transform + 1) % 4;
-    renderBlock(currentBlock, mainFrame, mainFrameColumn.value, "generate");
-  }
+  }, 0);
 };
 const initRotate = (block, frame, frameColumn, blockInfo) => {
   renderBlock(block, frame, frameColumn, "clear");
@@ -362,14 +376,40 @@ const clearBlock = () => {
   }
   initGame();
 };
+const clearTimer = () => {
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
+};
+const resetData = () => {
+  clearTimes.value = 0;
+  level.value = 0;
+  score.value = 0;
+  speed.value = initSpeed.value;
+};
+const clearFrame = (frame) => {
+  for (let i = 0; i < frame.length; i++) {
+    frame[i].data = 0;
+    frame[i].bgColor = bgColor.value;
+  }
+};
+const resetGame = () => {
+  resetData();
+  clearFrame(mainFrame);
+  clearFrame(subFrame);
+  getNext();
+  initGame();
+  isGameOver.value = false;
+  isGameRunning.value = false;
+  clearTimer();
+};
 const startGame = () => {
   if (isGameOver.value) {
     return;
   }
   isGameRunning.value = true;
-  if (timer) {
-    clearInterval(timer);
-  }
+  clearTimer();
   timer = setInterval(() => {
     moveDown();
   }, speed.value);
@@ -380,7 +420,7 @@ const pauseGame = () => {
   }
   if (isGameRunning.value) {
     isGameRunning.value = false;
-    clearInterval(timer);
+    clearTimer();
   } else {
     startGame();
   }
@@ -394,25 +434,17 @@ const changeTheme = () => {
 };
 const startLongPressMoveDown = (event) => {
   event.preventDefault();
-  if (timer) {
-    clearInterval(timer);
-  }
+  clearTimer();
   timer = setInterval(() => {
     moveDown();
   }, minimumSpeed.value);
 };
 const endLongPressMoveDown = (event) => {
   event.preventDefault();
-  if (timer) {
-    clearInterval(timer);
-  }
+  clearTimer();
   timer = setInterval(() => {
     moveDown();
   }, speed.value);
-};
-const renderFrame = () => {
-  renderMainFrame();
-  renderSubFrame();
 };
 const handleKeyDown = (event) => {
   switch (event.key) {
@@ -434,25 +466,45 @@ const handleKeyDown = (event) => {
     case "t":
       changeTheme();
       break;
+    case "r":
+      resetGame();
+      break;
   }
+};
+const loadRecord = () => {
+  const r = localStorage.getItem("record");
+  if (r) {
+    record.value = parseInt(r);
+  }
+};
+const storeRecord = () => {
+  localStorage.setItem("record", record.value);
 };
 
 onMounted(() => {
   window.addEventListener("keydown", handleKeyDown);
-  renderFrame();
+  renderMainFrame();
+  renderSubFrame();
   createAllBlock(theme.value, allBlocks);
+  loadRecord();
   getNext();
   initGame();
   watch(theme, (newValue) => {
     createAllBlock(newValue, allBlocks);
   });
+  watch(isGameOver, (newValue) => {
+    if (newValue) {
+      if (score.value > record.value) {
+        record.value = score.value;
+        storeRecord(record.value);
+      }
+    }
+  });
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", handleKeyDown);
-  if (timer) {
-    clearInterval(timer);
-  }
+  clearTimer();
 });
 </script>
 
