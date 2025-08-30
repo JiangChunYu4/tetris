@@ -3,7 +3,7 @@
     <div class="game-left">
       <div class="main-frame">
         <div
-          v-for="(item, index) in mainFrame"
+          v-for="(item, index) in mainFrame.slice(mainFrameColumn * subFrameRow)"
           :key="index"
           class="cell"
           :style="{
@@ -76,7 +76,7 @@ import { transformRules, createAllBlock } from "@/utils/blockUtils";
 import { flatIndex } from "@/utils/indexUtils";
 const mainFrame = reactive([]); // 主屏
 const subFrame = reactive([]); // 副屏
-const mainFrameRow = ref(20); // 主屏行数
+const mainFrameRow = ref(24); // 主屏行数
 const mainFrameColumn = ref(10); // 主屏列数
 const subFrameRow = ref(4); // 副屏行数
 const subFrameColumn = ref(4); // 副屏列数
@@ -335,7 +335,7 @@ const clearBlock = () => {
     }
     columnCount++;
   }
-  if (columnCount >= mainFrameRow.value - 1) {
+  if (columnCount >= mainFrameRow.value - subFrameRow.value) {
     pauseGame();
     isGameOver.value = true;
     return;
