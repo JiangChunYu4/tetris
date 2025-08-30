@@ -61,10 +61,10 @@
         </div>
       </div>
       <div class="system-box">
-        <div class="btn" @click="pauseGame" v-if="isGameRunning">暂停</div>
-        <div class="btn" @click="pauseGame" v-else="!isGameRunning">开始</div>
-        <div class="btn" @click="changeTheme">切换主题</div>
-        <div class="btn" @click="resetGame">重新开始</div>
+        <div class="btn" @click="pauseGame" v-if="isGameRunning">暂停 ENTER</div>
+        <div class="btn" @click="pauseGame" v-else="!isGameRunning">开始 ENTER</div>
+        <div class="btn" @click="changeTheme">切换主题 T</div>
+        <div class="btn" @click="resetGame">重新开始 R</div>
       </div>
     </div>
   </div>
@@ -614,6 +614,7 @@ onBeforeUnmount(() => {
         line-height: 50px;
         text-align: center;
         color: #fff;
+        font-family: Consolas;
         cursor: pointer;
       }
     }
