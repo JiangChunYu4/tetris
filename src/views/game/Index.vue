@@ -3,12 +3,21 @@
     <div class="game-left">
       <div class="main-frame">
         <div
-          v-for="(item, index) in mainFrame.slice(mainFrameColumn * subFrameRow)"
+          v-for="(item, index) in mainFrame.slice(
+            mainFrameColumn * subFrameRow
+          )"
           :key="index"
           class="cell"
-          :style="{
-            background: item.bgColor,
-          }"
+          :class="{ flash: item.flash }"
+          :style="
+            item.flash
+              ? {
+                  background: bgColor,
+                  animation: `flash-bg 0.2s alternate ${flashTimes.value}`,
+                  '--flash-block-color': item.bgColor,
+                }
+              : { background: item.bgColor }
+          "
         >
           <div v-if="isGameOver" class="game-over">Game Over</div>
         </div>
@@ -61,8 +70,12 @@
         </div>
       </div>
       <div class="system-box">
-        <div class="btn" @click="pauseGame" v-if="isGameRunning">暂停 ENTER</div>
-        <div class="btn" @click="pauseGame" v-else="!isGameRunning">开始 ENTER</div>
+        <div class="btn" @click="pauseGame" v-if="isGameRunning">
+          暂停 ENTER
+        </div>
+        <div class="btn" @click="pauseGame" v-else="!isGameRunning">
+          开始 ENTER
+        </div>
         <div class="btn" @click="changeTheme">切换主题 T</div>
         <div class="btn" @click="resetGame">重新开始 R</div>
       </div>
@@ -74,6 +87,7 @@
 import { ref, reactive, onMounted, onBeforeUnmount, watch } from "vue";
 import { transformRules, createAllBlock } from "@/utils/blockUtils";
 import { flatIndex } from "@/utils/indexUtils";
+
 const mainFrame = reactive([]); // 主屏
 const subFrame = reactive([]); // 副屏
 const mainFrameRow = ref(24); // 主屏行数
@@ -93,6 +107,7 @@ const initSpeed = ref(800); // 初始速度
 const speed = ref(initSpeed.value); // 当前速度
 const minimumSpeed = ref(100); // 最快速度
 const speedIncreasement = ref(40); // 速度增量
+const flashTimes = ref(3); // 方块消除闪动次数
 const isGameRunning = ref(false); // 游戏状态
 const isGameOver = ref(false); // 游戏是否结束
 const score = ref(0); // 得分
@@ -113,6 +128,7 @@ const renderMainFrame = () => {
     }
   }
 };
+
 const renderSubFrame = () => {
   for (let i = 0; i < subFrameRow.value; i++) {
     for (let j = 0; j < subFrameColumn.value; j++) {
@@ -125,6 +141,7 @@ const renderSubFrame = () => {
     }
   }
 };
+
 const renderBlock = (block, frame, frameColumn, type) => {
   const p = block.position;
   for (let i = 0; i < p.length; i += 2) {
@@ -141,6 +158,7 @@ const renderBlock = (block, frame, frameColumn, type) => {
     }
   }
 };
+
 const getNext = () => {
   let newIndex = Math.floor(Math.random() * allBlocks.length);
   while (newIndex === next.index) {
@@ -149,6 +167,7 @@ const getNext = () => {
   next.index = newIndex;
   next.transform = Math.floor(Math.random() * 4);
 };
+
 const initGame = () => {
   current.index = next.index;
   current.transform = next.transform;
@@ -161,6 +180,7 @@ const initGame = () => {
   nextBlock = JSON.parse(JSON.stringify(allBlocks[next.index]));
   initRotate(nextBlock, subFrame, subFrameColumn.value, next);
 };
+
 const canMoveDown = () => {
   const p = currentBlock.position;
   for (let i = 0; i < p.length; i += 2) {
@@ -174,6 +194,7 @@ const canMoveDown = () => {
   }
   return true;
 };
+
 const canMoveLeft = () => {
   const p = currentBlock.position;
   for (let i = 0; i < p.length; i += 2) {
@@ -184,6 +205,7 @@ const canMoveLeft = () => {
   }
   return true;
 };
+
 const canMoveRight = () => {
   const p = currentBlock.position;
   for (let i = 0; i < p.length; i += 2) {
@@ -197,6 +219,7 @@ const canMoveRight = () => {
   }
   return true;
 };
+
 const canRotate = () => {
   const block = JSON.parse(JSON.stringify(currentBlock));
   const t = current.transform;
@@ -222,6 +245,7 @@ const canRotate = () => {
   }
   return true;
 };
+
 const moveDown = () => {
   if (isGameOver.value || !isGameRunning.value) {
     return;
@@ -239,6 +263,7 @@ const moveDown = () => {
     }
   }, 0);
 };
+
 const moveLeft = () => {
   if (isGameOver.value || !isGameRunning.value) {
     return;
@@ -253,6 +278,7 @@ const moveLeft = () => {
     }
   }, 0);
 };
+
 const moveRight = () => {
   if (isGameOver.value || !isGameRunning.value) {
     return;
@@ -267,6 +293,7 @@ const moveRight = () => {
     }
   }, 0);
 };
+
 const downRotate = () => {
   if (isGameOver.value || !isGameRunning.value) {
     return;
@@ -289,6 +316,7 @@ const downRotate = () => {
     }
   }, 0);
 };
+
 const initRotate = (block, frame, frameColumn, blockInfo) => {
   renderBlock(block, frame, frameColumn, "clear");
   for (let i = 0; i < blockInfo.transform; i++) {
@@ -305,9 +333,11 @@ const initRotate = (block, frame, frameColumn, blockInfo) => {
   }
   renderBlock(block, frame, frameColumn, "generate");
 };
+
 const calculateScore = (removeRow) => {
   score.value += ((removeRow * (removeRow + 1)) / 2) * 100 * level.value;
 };
+
 const speedUp = () => {
   clearTimes.value++;
   level.value = Math.max(
@@ -318,6 +348,7 @@ const speedUp = () => {
   speed.value = Math.max(speed.value, minimumSpeed.value);
   startGame();
 };
+
 const clearBlock = () => {
   let columnCount = 0;
   for (let i = mainFrameRow.value - 1; i >= 0; i--) {
@@ -340,12 +371,28 @@ const clearBlock = () => {
     isGameOver.value = true;
     return;
   }
-  if (removeRows.length > 0) {
+  if (removeRows.length === 0) {
+    initGame();
+    return;
+  }
+  isGameRunning.value = false;
+  for (let t = 0; t < flashTimes.value; t++) {
+    setTimeout(() => {
+      for (let i = 0; i < removeRows.length; i++) {
+        for (let j = 0; j < mainFrameColumn.value; j++) {
+          const index = flatIndex(removeRows[i], j, mainFrameColumn.value);
+          mainFrame[index].flash = !mainFrame[index].flash;
+        }
+      }
+    }, t * 200);
+  }
+  setTimeout(() => {
     for (let i = 0; i < removeRows.length; i++) {
       for (let j = 0; j < mainFrameColumn.value; j++) {
         const index = flatIndex(removeRows[i], j, mainFrameColumn.value);
         mainFrame[index].bgColor = bgColor.value;
         mainFrame[index].data = 0;
+        mainFrame[index].flash = false;
       }
     }
     for (let i = mainFrameRow.value - 1; i >= 0; i--) {
@@ -373,27 +420,32 @@ const clearBlock = () => {
     calculateScore(removeRows.length);
     speedUp();
     removeRows.splice(0, removeRows.length);
-  }
-  initGame();
+    isGameRunning.value = true;
+    initGame();
+  }, flashTimes.value * 200);
 };
+
 const clearTimer = () => {
   if (timer) {
     clearInterval(timer);
     timer = null;
   }
 };
+
 const resetData = () => {
   clearTimes.value = 0;
   level.value = 0;
   score.value = 0;
   speed.value = initSpeed.value;
 };
+
 const clearFrame = (frame) => {
   for (let i = 0; i < frame.length; i++) {
     frame[i].data = 0;
     frame[i].bgColor = bgColor.value;
   }
 };
+
 const resetGame = () => {
   resetData();
   clearFrame(mainFrame);
@@ -404,6 +456,7 @@ const resetGame = () => {
   isGameRunning.value = false;
   clearTimer();
 };
+
 const startGame = () => {
   if (isGameOver.value) {
     return;
@@ -414,6 +467,7 @@ const startGame = () => {
     moveDown();
   }, speed.value);
 };
+
 const pauseGame = () => {
   if (isGameOver.value) {
     return;
@@ -425,6 +479,7 @@ const pauseGame = () => {
     startGame();
   }
 };
+
 const changeTheme = () => {
   if (theme.value === "lineGradientLigthTheme") {
     theme.value = "normalLightTheme";
@@ -432,6 +487,7 @@ const changeTheme = () => {
     theme.value = "lineGradientLigthTheme";
   }
 };
+
 const startLongPressMoveDown = (event) => {
   event.preventDefault();
   clearTimer();
@@ -439,6 +495,7 @@ const startLongPressMoveDown = (event) => {
     moveDown();
   }, minimumSpeed.value);
 };
+
 const endLongPressMoveDown = (event) => {
   event.preventDefault();
   clearTimer();
@@ -446,6 +503,7 @@ const endLongPressMoveDown = (event) => {
     moveDown();
   }, speed.value);
 };
+
 const handleKeyDown = (event) => {
   switch (event.key) {
     case "ArrowUp":
@@ -471,12 +529,14 @@ const handleKeyDown = (event) => {
       break;
   }
 };
+
 const loadRecord = () => {
   const r = localStorage.getItem("record");
   if (r) {
     record.value = parseInt(r);
   }
 };
+
 const storeRecord = () => {
   localStorage.setItem("record", record.value);
 };
@@ -623,6 +683,15 @@ onBeforeUnmount(() => {
   .cell {
     width: var(--cell-size);
     height: var(--cell-size);
+    transition: background 0.2s;
+  }
+  @keyframes flash-bg {
+    0% {
+      background: var(--flash-block-color, #fff);
+    }
+    100% {
+      background: #eeeeee;
+    }
   }
 }
 </style>
