@@ -101,7 +101,7 @@ const current = reactive({ index: 0, transform: 0 }); // 当前方块下标及�
 const next = reactive({ index: 0, transform: 0 }); // 下一个方块下标及旋转下标
 let currentBlock = reactive({}); // 当前方块
 let nextBlock = reactive({}); // 下一个方块
-let timer = null; // 控制游戏运行的定时器
+const timer = ref(null); // 控制游戏运行的定时器
 const removeRows = reactive([]); // 预消除行的下标
 const initSpeed = ref(800); // 初始速度
 const speed = ref(initSpeed.value); // 当前速度
@@ -425,7 +425,7 @@ const clearBlock = () => {
   }, flashTimes.value * 200);
 };
 
-const clearTimer = () => {
+const clearTimer = (timer) => {
   if (timer) {
     clearInterval(timer);
     timer = null;
@@ -454,7 +454,7 @@ const resetGame = () => {
   initGame();
   isGameOver.value = false;
   isGameRunning.value = false;
-  clearTimer();
+  clearTimer(timer.value);
 };
 
 const startGame = () => {
@@ -462,8 +462,8 @@ const startGame = () => {
     return;
   }
   isGameRunning.value = true;
-  clearTimer();
-  timer = setInterval(() => {
+  clearTimer(timer.value);
+  timer.value = setInterval(() => {
     moveDown();
   }, speed.value);
 };
@@ -474,7 +474,7 @@ const pauseGame = () => {
   }
   if (isGameRunning.value) {
     isGameRunning.value = false;
-    clearTimer();
+  clearTimer(timer.value);
   } else {
     startGame();
   }
@@ -490,16 +490,16 @@ const changeTheme = () => {
 
 const startLongPressMoveDown = (event) => {
   event.preventDefault();
-  clearTimer();
-  timer = setInterval(() => {
+  clearTimer(timer.value);
+  timer.value = setInterval(() => {
     moveDown();
   }, minimumSpeed.value);
 };
 
 const endLongPressMoveDown = (event) => {
   event.preventDefault();
-  clearTimer();
-  timer = setInterval(() => {
+  clearTimer(timer.value);
+  timer.value = setInterval(() => {
     moveDown();
   }, speed.value);
 };
@@ -564,7 +564,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", handleKeyDown);
-  clearTimer();
+  clearTimer(timer.value);
 });
 </script>
 
