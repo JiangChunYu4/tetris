@@ -3,9 +3,7 @@
     <div class="game-left">
       <div class="main-frame">
         <div
-          v-for="(item, index) in mainFrame.slice(
-            mainFrameColumn * subFrameRow
-          )"
+          v-for="(item, index) in mainFrame.slice(mainFrameColumn * subFrameRow)"
           :key="index"
           class="cell"
           :class="{ flash: item.flash }"
@@ -14,7 +12,7 @@
               ? {
                   background: bgColor,
                   animation: `flash-bg 0.2s alternate ${flashTimes.value}`,
-                  '--flash-block-color': item.bgColor,
+                  '--flash-block-color': item.bgColor
                 }
               : { background: item.bgColor }
           "
@@ -43,7 +41,7 @@
           :key="index"
           class="cell"
           :style="{
-            background: item.bgColor,
+            background: item.bgColor
           }"
         ></div>
       </div>
@@ -70,14 +68,14 @@
         </div>
       </div>
       <div class="system-box">
-        <div class="btn" @click="pauseGame" v-if="isGameRunning">
-          暂停 ENTER
-        </div>
-        <div class="btn" @click="pauseGame" v-else="!isGameRunning">
-          开始 ENTER
-        </div>
+        <div class="btn" @click="pauseGame" v-if="isGameRunning">暂停 ENTER</div>
+        <div class="btn" @click="pauseGame" v-else="!isGameRunning">开始 ENTER</div>
         <div class="btn" @click="changeTheme">切换主题 T</div>
         <div class="btn" @click="resetGame">重新开始 R</div>
+        <div class="fps-display">
+          <span>{{ fps }}</span>
+          <span>FPS</span>
+        </div>
       </div>
     </div>
   </div>
@@ -101,7 +99,7 @@ const current = reactive({ index: 0, transform: 0 }); // 当前方块下标及�
 const next = reactive({ index: 0, transform: 0 }); // 下一个方块下标及旋转下标
 let currentBlock = reactive({}); // 当前方块
 let nextBlock = reactive({}); // 下一个方块
-const timer = ref(null); // 控制游戏运行的定时器
+const timer = ref(null); // 控制游戏运行的动画帧ID
 const removeRows = reactive([]); // 预消除行的下标
 const initSpeed = ref(800); // 初始速度
 const speed = ref(initSpeed.value); // 当前速度
@@ -115,6 +113,11 @@ const level = ref(1); // 等级
 const clearTimes = ref(0); // 消除次数
 const upgradeThreshold = ref(5); // 等级升级阈值
 const record = ref(0); // 历史记录
+let lastMoveDownTime = 0; // 上次下移的时间戳
+let longPressSpeed = 0; // 长按下移的速度
+const fps = ref(0); // 实时帧率
+let frameCount = 0; // 帧计数
+let lastFpsUpdateTime = 0; // 上次更新FPS的时间
 
 const renderMainFrame = () => {
   for (let i = 0; i < mainFrameRow.value; i++) {
@@ -122,7 +125,7 @@ const renderMainFrame = () => {
       mainFrame.push(
         reactive({
           data: 0,
-          bgColor: bgColor.value,
+          bgColor: bgColor.value
         })
       );
     }
@@ -135,7 +138,7 @@ const renderSubFrame = () => {
       subFrame.push(
         reactive({
           data: 0,
-          bgColor: bgColor.value,
+          bgColor: bgColor.value
         })
       );
     }
@@ -210,10 +213,7 @@ const canMoveRight = () => {
   const p = currentBlock.position;
   for (let i = 0; i < p.length; i += 2) {
     const nextRowIndex = flatIndex(p[i], p[i + 1] + 1, mainFrameColumn.value);
-    if (
-      p[i + 1] >= mainFrameColumn.value - 1 ||
-      mainFrame[nextRowIndex].data > 0
-    ) {
+    if (p[i + 1] >= mainFrameColumn.value - 1 || mainFrame[nextRowIndex].data > 0) {
       return false;
     }
   }
@@ -334,16 +334,13 @@ const initRotate = (block, frame, frameColumn, blockInfo) => {
   renderBlock(block, frame, frameColumn, "generate");
 };
 
-const calculateScore = (removeRow) => {
+const calculateScore = removeRow => {
   score.value += ((removeRow * (removeRow + 1)) / 2) * 100 * level.value;
 };
 
 const speedUp = () => {
   clearTimes.value++;
-  level.value = Math.max(
-    level.value,
-    Math.floor(clearTimes.value / upgradeThreshold.value) + 1
-  );
+  level.value = Math.max(level.value, Math.floor(clearTimes.value / upgradeThreshold.value) + 1);
   speed.value = initSpeed.value - (level.value - 1) * speedIncreasement.value;
   speed.value = Math.max(speed.value, minimumSpeed.value);
   startGame();
@@ -404,11 +401,7 @@ const clearBlock = () => {
         for (let k = 0; k < mainFrameColumn.value; k++) {
           const index = flatIndex(i, k, mainFrameColumn.value);
           if (mainFrame[index].data > 0) {
-            const toIndex = flatIndex(
-              i + moveDownRow,
-              k,
-              mainFrameColumn.value
-            );
+            const toIndex = flatIndex(i + moveDownRow, k, mainFrameColumn.value);
             mainFrame[toIndex].data = mainFrame[index].data;
             mainFrame[toIndex].bgColor = mainFrame[index].bgColor;
             mainFrame[index].data = 0;
@@ -425,11 +418,33 @@ const clearBlock = () => {
   }, flashTimes.value * 200);
 };
 
-const clearTimer = (timer) => {
-  if (timer) {
-    clearInterval(timer);
-    timer = null;
+const clearTimer = timerOrId => {
+  if (timerOrId) {
+    cancelAnimationFrame(timerOrId);
   }
+};
+
+const gameLoop = timestamp => {
+  if (lastMoveDownTime === 0) {
+    lastMoveDownTime = timestamp;
+  }
+
+  // 计算实时FPS
+  frameCount++;
+  if (timestamp - lastFpsUpdateTime >= 1000) {
+    fps.value = frameCount;
+    frameCount = 0;
+    lastFpsUpdateTime = timestamp;
+  }
+
+  const currentSpeed = longPressSpeed > 0 ? longPressSpeed : speed.value;
+
+  if (timestamp - lastMoveDownTime >= currentSpeed) {
+    moveDown();
+    lastMoveDownTime = timestamp;
+  }
+
+  timer.value = requestAnimationFrame(gameLoop);
 };
 
 const resetData = () => {
@@ -439,7 +454,7 @@ const resetData = () => {
   speed.value = initSpeed.value;
 };
 
-const clearFrame = (frame) => {
+const clearFrame = frame => {
   for (let i = 0; i < frame.length; i++) {
     frame[i].data = 0;
     frame[i].bgColor = bgColor.value;
@@ -462,10 +477,12 @@ const startGame = () => {
     return;
   }
   isGameRunning.value = true;
-  clearTimer(timer.value);
-  timer.value = setInterval(() => {
-    moveDown();
-  }, speed.value);
+  longPressSpeed = 0;
+  lastMoveDownTime = 0;
+  if (timer.value) {
+    cancelAnimationFrame(timer.value);
+  }
+  timer.value = requestAnimationFrame(gameLoop);
 };
 
 const pauseGame = () => {
@@ -474,7 +491,10 @@ const pauseGame = () => {
   }
   if (isGameRunning.value) {
     isGameRunning.value = false;
-  clearTimer(timer.value);
+    if (timer.value) {
+      cancelAnimationFrame(timer.value);
+      timer.value = null;
+    }
   } else {
     startGame();
   }
@@ -488,23 +508,18 @@ const changeTheme = () => {
   }
 };
 
-const startLongPressMoveDown = (event) => {
+const startLongPressMoveDown = event => {
   event.preventDefault();
-  clearTimer(timer.value);
-  timer.value = setInterval(() => {
-    moveDown();
-  }, minimumSpeed.value);
+  longPressSpeed = minimumSpeed.value;
 };
 
-const endLongPressMoveDown = (event) => {
+const endLongPressMoveDown = event => {
   event.preventDefault();
-  clearTimer(timer.value);
-  timer.value = setInterval(() => {
-    moveDown();
-  }, speed.value);
+  longPressSpeed = 0;
+  lastMoveDownTime = 0;
 };
 
-const handleKeyDown = (event) => {
+const handleKeyDown = event => {
   switch (event.key) {
     case "ArrowUp":
       downRotate();
@@ -549,10 +564,10 @@ onMounted(() => {
   loadRecord();
   getNext();
   initGame();
-  watch(theme, (newValue) => {
+  watch(theme, newValue => {
     createAllBlock(newValue, allBlocks);
   });
-  watch(isGameOver, (newValue) => {
+  watch(isGameOver, newValue => {
     if (newValue) {
       if (score.value > record.value) {
         record.value = score.value;
@@ -564,7 +579,9 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", handleKeyDown);
-  clearTimer(timer.value);
+  if (timer.value) {
+    cancelAnimationFrame(timer.value);
+  }
 });
 </script>
 
@@ -596,6 +613,7 @@ onBeforeUnmount(() => {
     flex-direction: column;
     gap: 10px;
     height: 100%;
+
     .main-frame {
       position: relative;
       display: grid;
@@ -603,6 +621,7 @@ onBeforeUnmount(() => {
       grid-template-columns: repeat(var(--main-frame-column), var(--cell-size));
       gap: var(--cell-gap);
       border: 1px solid #ccc;
+
       .game-over {
         position: absolute;
         left: 50%;
@@ -617,10 +636,12 @@ onBeforeUnmount(() => {
         text-align: center;
       }
     }
+
     .operation-box {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 20px 10px;
+
       .btn {
         height: var(--btn-height);
         background: rgba(72, 72, 213, 0.6);
@@ -630,6 +651,7 @@ onBeforeUnmount(() => {
         color: #fff;
         cursor: pointer;
       }
+
       .rotate,
       .move-down {
         grid-column: 1/3;
@@ -643,19 +665,23 @@ onBeforeUnmount(() => {
     flex-direction: column;
     gap: 10px;
     height: 100%;
+
     .sub-frame {
       display: grid;
       grid-template-rows: repeat(var(--sub-frame-row), var(--cell-size));
       grid-template-columns: repeat(var(--sub-frame-column), var(--cell-size));
       gap: var(--cell-gap);
     }
+
     .data-box {
       .data-row {
         display: flex;
         gap: 10px;
+
         .data-label {
           font-size: var(--data-font-size);
         }
+
         .data {
           font-size: var(--data-font-size);
           font-weight: 700;
@@ -663,19 +689,37 @@ onBeforeUnmount(() => {
         }
       }
     }
+
     .system-box {
       display: grid;
       grid-template-columns: repeat(1, 1fr);
       gap: 5px;
+
+      --box-width: 100px;
+      --box-line-height: 50px;
+
       .btn {
-        width: 100px;
+        width: var(--box-width);
         background: rgba(246, 214, 11, 0.8);
         border-radius: var(--btn-border-radius);
-        line-height: 50px;
+        line-height: var(--box-line-height);
         text-align: center;
         color: #fff;
         font-family: Consolas;
         cursor: pointer;
+      }
+
+      .fps-display {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        width: var(--box-width);
+        line-height: var(--box-line-height);
+        border-radius: var(--btn-border-radius);
+        font-family: Consolas;
+        font-weight: 700;
+        color: #39ff14;
       }
     }
   }
@@ -685,10 +729,12 @@ onBeforeUnmount(() => {
     height: var(--cell-size);
     transition: background 0.2s;
   }
+
   @keyframes flash-bg {
     0% {
       background: var(--flash-block-color, #fff);
     }
+
     100% {
       background: #eeeeee;
     }

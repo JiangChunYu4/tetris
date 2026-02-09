@@ -9,17 +9,9 @@ const colorPalette = {
     "linear-gradient(180deg, #7BE7FF 0%, #1E85E2 100%)",
     "linear-gradient(180deg, #89FED8 0%, #18C997 100%)",
     "linear-gradient(180deg, #FFED48 0%, #FD9E16 100%)",
-    "linear-gradient(180deg, #FFBA8D 0%, #EB6423 100%)",
+    "linear-gradient(180deg, #FFBA8D 0%, #EB6423 100%)"
   ],
-  normalLightTheme: [
-    "#2B7AF5",
-    "#2B9DF5",
-    "#79CFFF",
-    "#1B67DD",
-    "#4F94FF",
-    "#2180F2",
-    "#3FD0FF",
-  ],
+  normalLightTheme: ["#2B7AF5", "#2B9DF5", "#79CFFF", "#1B67DD", "#4F94FF", "#2180F2", "#3FD0FF"]
 };
 
 /**
@@ -32,7 +24,7 @@ const allBlockPosition = [
   [1, 0, 1, 1, 1, 2, 1, 3], // I
   [0, 2, 1, 1, 1, 2, 2, 1], // Z
   [0, 1, 0, 2, 1, 1, 2, 1], // J
-  [1, 1, 2, 0, 2, 1, 2, 2], // T
+  [1, 1, 2, 0, 2, 1, 2, 2] // T
 ];
 
 /**
@@ -43,44 +35,44 @@ const transformRules = [
     { x: 1, y: 1 },
     { x: 1, y: 0 },
     { x: 0, y: -2 },
-    { x: -2, y: 1 },
+    { x: -2, y: 1 }
   ],
   [
     { x: 1, y: 1 },
     { x: 1, y: 0 },
     { x: 0, y: -2 },
-    { x: -2, y: 1 },
+    { x: -2, y: 1 }
   ],
   [
     { x: 0, y: 1 },
     { x: 1, y: 0 },
     { x: 0, y: -1 },
-    { x: -1, y: 0 },
+    { x: -1, y: 0 }
   ],
   [
     { x: -1, y: 2 },
     { x: 1, y: 1 },
-    { x: 2, y: -1},
-    { x: -2, y: -2 },
+    { x: 2, y: -1 },
+    { x: -2, y: -2 }
   ],
   [
     { x: 2, y: 0 },
     { x: 0, y: -1 },
     { x: -1, y: -1 },
-    { x: -1, y: 2 },
+    { x: -1, y: 2 }
   ],
   [
     { x: 1, y: 1 },
     { x: 1, y: 0 },
     { x: 0, y: -2 },
-    { x: -2, y: 1 },
+    { x: -2, y: 1 }
   ],
   [
     { x: 0, y: 0 },
     { x: 1, y: 0 },
     { x: -1, y: 0 },
-    { x: 0, y: 0 },
-  ],
+    { x: 0, y: 0 }
+  ]
 ];
 
 /**
@@ -94,7 +86,7 @@ const createAllBlock = (theme, allBlocks) => {
   for (let i = 0; i < allBlockPosition.length; i++) {
     const block = {
       position: allBlockPosition[i],
-      color: colorPalette[theme][i],
+      color: colorPalette[theme][i]
     };
     allBlocks.push(block);
   }

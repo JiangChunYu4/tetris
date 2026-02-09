@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && node ./scripts/copy404.js",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "vue": "^3.4.21",
@@ -14,6 +16,8 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.4",
+    "less": "^4.5.1",
+    "prettier": "^3.8.1",
     "vite": "^5.2.8"
   }
 }
